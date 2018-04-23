@@ -1,7 +1,7 @@
 """Module for work with DB
 """
 
-import sqlite3
+
 import peewee
 from features import get_features_for_email
 from os import listdir
@@ -52,6 +52,24 @@ def fill_untagged_data_table(dir, is_sign, count):
             UntaggedData.create(id=md5_hash, text=body, sender=sender, features=features, tag=is_sign)
         except peewee.IntegrityError: # возникает при вставке тех же значений
             pass
+
+
+def get_classifier_data(first=True):
+    """Извлечение данных из таблицы для обучения классификатора
+    """
+
+    data = {"features": [], "tag": []}
+
+    if first:
+        selected_data = UntaggedData.select(UntaggedData.features, UntaggedData.tag).tuples()
+    else:
+        pass # данные для второго классификатора
+
+    for feature, tag in selected_data:
+        data["features"].append([int(x) for x in feature.split(',')])
+        data["tag"].append(tag)
+
+    return data
 
 def md5(fname):
     hash_md5 = hashlib.md5()
