@@ -3,23 +3,35 @@
 
 
 import peewee
-from features import get_features_for_email
+from features import get_features_for_email, get_features_for_line
 from os import listdir
 from os.path import isfile, join
 import hashlib
+import re
 
 db = peewee.SqliteDatabase('signature.db')
 
-class UntaggedData(peewee.Model):
-    """Модель таблицы, содержащий тексты электронных писем, отправителей,
+class EMailTable(peewee.Model):
+    """Модель таблицы, содержащей тексты электронных писем, отправителей,
        списки признаков и значения для обучения
     """
 
     id = peewee.TextField(primary_key=True)
-    text = peewee.TextField()
+    body = peewee.TextField()
     sender = peewee.TextField()
-    features = peewee.TextField(null=True) # строка признаков через запятую
-    tag = peewee.IntegerField() # выходное значение: 1 - есть подпись, 0 - нет подписи
+    features = peewee.TextField() # строка признаков через запятую
+    tag = peewee.IntegerField() # выходное значение: 1 - есть подпись, -1 - нет подписи
+
+    class Meta:
+        database = db
+
+class LinesTable(peewee.Model):
+    """Модель таблицы, содержащей строки электронных писем,
+       списки признаков и значения для обучения
+    """
+    line = peewee.TextField(primary_key=True)
+    features = peewee.TextField()
+    tag = peewee.IntegerField()
 
     class Meta:
         database = db
@@ -27,12 +39,45 @@ class UntaggedData(peewee.Model):
 
 def setup_db():
     try:
-        UntaggedData.create_table()
+        EMailTable.create_table()
     except peewee.OperationalError:
-        print("UntaggedData table already exist!")
+        print("EMailTable table already exist!")
 
-def fill_untagged_data_table(dir, is_sign, count):
-    """Заполнение таблицы электронных пием
+    try:
+        LinesTable.create_table()
+    except peewee.OperationalError:
+        print("Lines table already exist!")
+
+
+def fill_lines_table(lines, sender):
+    for line in lines:
+        
+        if re.match(r'#sig#', line):
+            line = re.sub(r'#sig#', '', line)
+            tag = 1
+        else:
+            tag = -1
+
+        features = [str(item) for item in get_features_for_line(line, sender)]
+        features = ','.join(features)
+        
+        try:
+            LinesTable.create(line=line, features=features, tag=tag)
+        except peewee.IntegrityError:
+            print("IntegrityError")
+
+def count_sig_and_non_sig_lines():
+    """Возвращает количество строк с подписью и без
+    """
+
+    return (
+        LinesTable.select().where(LinesTable.tag == 1).count(),
+        LinesTable.select().where(LinesTable.tag == -1).count()
+    )
+
+
+def fill_tables(dir, is_sign, count):
+    """Заполнение таблиц в бд
     
         dir -- папка, содержащая письма
         is_sign -- признак того, есть ли в письмах подписи
@@ -45,13 +90,20 @@ def fill_untagged_data_table(dir, is_sign, count):
         with open(file, "r") as f_body, open(file + "_sender") as f_sender:
             body = f_body.readlines()
             sender = f_sender.readline()
+
+            non_empty_lines = [l for l in body if l.strip()]
+            fill_lines_table(non_empty_lines, sender)
+            
+            if is_sign == 1:
+                body = [re.sub(r'#sig#', '', line) for line in body]
             features = [str(item) for item in get_features_for_email(body, count, sender)]
             features = ','.join(features)
+
         md5_hash = md5(file)
         try:
-            UntaggedData.create(id=md5_hash, text=body, sender=sender, features=features, tag=is_sign)
+            EMailTable.create(id=md5_hash, body=body, sender=sender, features=features, tag=is_sign)
         except peewee.IntegrityError: # возникает при вставке тех же значений
-            pass
+            print("IntegrityError")
 
 
 def get_classifier_data(first=True):
@@ -61,9 +113,9 @@ def get_classifier_data(first=True):
     data = {"features": [], "tag": []}
 
     if first:
-        selected_data = UntaggedData.select(UntaggedData.features, UntaggedData.tag).tuples()
+        selected_data = EMailTable.select(EMailTable.features, EMailTable.tag).tuples()
     else:
-        pass # данные для второго классификатора
+        selected_data = LinesTable.select(LinesTable.features, LinesTable.tag).tuples()
 
     for feature, tag in selected_data:
         data["features"].append([int(x) for x in feature.split(',')])
@@ -79,10 +131,10 @@ def md5(fname):
     return hash_md5.hexdigest()
 
 if __name__ == '__main__':
-    setup_db()
-    fill_untagged_data_table('dataset/with/', 1, 10)
-    fill_untagged_data_table('dataset/without/', 0, 10)
-    
+    #setup_db()
+    #ill_tables('dataset/dataset/with/', 1, 10)
+    #fill_tables('dataset/dataset/without/', -1, 10)
+    print(count_sig_and_non_sig_lines())
 
     
 

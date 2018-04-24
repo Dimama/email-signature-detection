@@ -9,32 +9,33 @@ from functools import reduce
 MAX_SIGNATURE_LINE_LEN = 60
 HEADWORD_PERCENT = 66
 
-RE_EMAIL = re.compile(r'^[a-zA-Z0-9_.#$&!\'=/^?~{|}+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+RE_EMAIL = re.compile(r'^[a-zA-Z0-9_.#$&!\'=/^?~{|}+-]'
+                      r'+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
 
 RE_URL = re.compile(r'^(https?|ftp)://[^\s/$.?#].[^\s]*$')
 
 RE_SEPARATOR = re.compile(r'^[\s]*[-]{1,5}[\s]*$')
 
-RE_SPEC_SYMBOLS = re.compile(r'^[\s]*([\*]|#|[\+]|[\^]|-|[\~]|[\&]|[\$]|_|[\!]|'
-                            r'[\/]|[\%]|[\:]|[\=]){10,}[\s]*$')
+RE_SPEC_SYMBOLS = re.compile(r'^[\s]*([\*]|#|[\+]|[\^]|-|[\~]|[\&]|[\$]|_|[\!]'
+                             r'|[\/]|[\%]|[\:]|[\=]){10,}[\s]*$')
 
-RE_TEL_NUMBER = re.compile(r'^(1[ \-\+]{0,3}|\+1[ -\+]{0,3}|\+1|\+)?'
-    r'((\(\+?1-[2-9][0-9]{1,2}\))|(\(\+?[2-8][0-9][0-9]\))|(\(\+?[1-9][0-9]\))'
-    r'|(\(\+?[17]\))|(\([2-9][2-9]\))|([ \-\.]{0,3}[0-9]{2,4}))?([ \-\.][0-9])?'
-    r'([ \-\.]{0,3}[0-9]{2,4}){2,3}$')
+RE_TEL_NUMBER = re.compile(r'(((\+?[\d]{,1}\s?\(?[\d]{3,4}\)?\s?)|'
+    r'([\d]\-[\d]{3}\-))[\d]{2,3}[\s-]?[\d]{2}[\s-]?[\d]{2})|'
+    r'(\(? ?[\d]{2,3} ?\)?[.\- ]{,1})[\d]{2,3}[.\- ]{,1}[\d]{2,4}')
 
 RE_STANDART_SING_WORDS = re.compile(r'(T|t)hank.*,|(B|b)est|(R|r)egards|'
-                         r'^sent[ ]{1}from[ ]{1}my[\s,!\w]*$|BR|(S|s)incerely|'
-                         r'(C|c)orporation|Group|(О|o)тправлено\sс*|(С|с)\s(У|у)важением|'
-                         r'(У|y)дачного|(Х|х)орошего|(В|в)ам|доброго|(С|с)пасибо')
+        r'^sent[ ]{1}from[ ]{1}my[\s,!\w]*$|BR|(S|s)incerely|'
+        r'(C|c)orporation|Group|(О|o)тправлено\sс*|(С|с)\s(У|у)важением|'
+        r'(У|y)дачного|(Х|х)орошего|(В|в)ам|доброго|(С|с)пасибо')
 
-# поправить
 RE_NAME = re.compile(r'([A-Z][a-z]+\s\s?[A-Z][\.]?\s\s?[A-Z][a-z]+)'
+    r'|[A-Z][a-z]+\s\s?[A-Z][a-z]+'
     r'|([А-ЯЁ][а-яё]+[\-\s]?){2,}'
     r'|([А-ЯЁ][а-яё]+\s[А-ЯЁ]\.?\s?[А-ЯЁ]\.?)'
     r'|([А-ЯЁ]\.?\s?[А-ЯЁ]\.?)\s[А-ЯЁ][а-яё]+')
 
-STANDART_NAMES = ['gmail', 'mail', 'yandex', 'yahoo', 'com', 'ru', 'net', 'org']
+STANDART_NAMES = ['gmail', 'mail', 'yandex', 'yahoo',
+                 'com', 'ru', 'net', 'org']
 
 
 def headword_percent(s):
@@ -55,8 +56,10 @@ def headword_percent(s):
 
     return 0
 
+
 def headword_more_than(s):
     return 1 if headword_percent(s) >= HEADWORD_PERCENT else 0
+
 
 def categories_percent(s, catagories):
     """Процент символов заданных категорий
@@ -68,11 +71,13 @@ def categories_percent(s, catagories):
             count += 1
     return 100 * float(count) / len(s)
 
+
 def punct_percent(s):
     """Процент пунктуационных символов
     """
 
     return categories_percent(s, ['Po'])
+
 
 def extract_names(sender):
     """Извлекает имена из заголовка 'From:'
@@ -83,6 +88,7 @@ def extract_names(sender):
     names = list(set(names))
 
     return names
+
 
 def is_contain_sender_name(sender):
     """Возвращает функцию для поиска имени отправителя
@@ -111,7 +117,7 @@ def get_features_func_list(sender=''):
         regex_search(RE_URL),
         regex_search(RE_SEPARATOR),
         regex_search(RE_SPEC_SYMBOLS),
-        regex_search(RE_TEL_NUMBER), # поменять регулярку
+        regex_search(RE_TEL_NUMBER),
         regex_search(RE_NAME),
         regex_search(RE_STANDART_SING_WORDS),
         headword_more_than,
