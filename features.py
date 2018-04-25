@@ -9,12 +9,12 @@ from functools import reduce
 MAX_SIGNATURE_LINE_LEN = 60
 HEADWORD_PERCENT = 66
 
-RE_EMAIL = re.compile(r'^[a-zA-Z0-9_.#$&!\'=/^?~{|}+-]'
+RE_EMAIL = re.compile(r'[a-zA-Z0-9_.#$&!\'=/^?~{|}+-]'
                       r'+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
 
-RE_URL = re.compile(r'^(https?|ftp)://[^\s/$.?#].[^\s]*$')
+RE_URL = re.compile(r'(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?')
 
-RE_SEPARATOR = re.compile(r'^[\s]*[-]{1,5}[\s]*$')
+RE_SEPARATOR = re.compile(r'^[\s]*[-]{1,10}[\s]*$')
 
 RE_SPEC_SYMBOLS = re.compile(r'^[\s]*([\*]|#|[\+]|[\^]|-|[\~]|[\&]|[\$]|_|[\!]'
                              r'|[\/]|[\%]|[\:]|[\=]){10,}[\s]*$')
@@ -134,11 +134,11 @@ def get_features_for_line(line, sender=''):
     
     res =  [f(line) for f in get_features_func_list(sender)]
     
-    print("------------")
-    print("Sender:", sender)
-    print("Line:", line)
-    print(res)
-    print("------------")
+    #print("------------")
+    #print("Sender:", sender)
+    #print("Line:", line)
+    #print(res)
+    #print("------------")
 
     return res
 

@@ -2,14 +2,15 @@
 """
 
 
-import peewee
-from features import get_features_for_email, get_features_for_line
-from os import listdir
-from os.path import isfile, join
 import hashlib
 import re
+from os import listdir
+from os.path import isfile, join
+import peewee
+from const import DB_NAME
+from features import get_features_for_email, get_features_for_line
 
-db = peewee.SqliteDatabase('signature.db')
+db = peewee.SqliteDatabase(DB_NAME)
 
 class EMailTable(peewee.Model):
     """Модель таблицы, содержащей тексты электронных писем, отправителей,
@@ -64,7 +65,9 @@ def fill_lines_table(lines, sender):
         try:
             LinesTable.create(line=line, features=features, tag=tag)
         except peewee.IntegrityError:
-            print("IntegrityError")
+            pass
+            #print("IntegrityError", line)
+
 
 def count_sig_and_non_sig_lines():
     """Возвращает количество строк с подписью и без
@@ -88,7 +91,7 @@ def fill_tables(dir, is_sign, count):
     files = [dir + f for f in listdir(dir) if isfile(join(dir, f)) and not f.count("_sender")]
     for file in files:
         with open(file, "r") as f_body, open(file + "_sender") as f_sender:
-            body = f_body.readlines()
+            body = f_body.read().split('\n')
             sender = f_sender.readline()
 
             non_empty_lines = [l for l in body if l.strip()]
@@ -103,16 +106,17 @@ def fill_tables(dir, is_sign, count):
         try:
             EMailTable.create(id=md5_hash, body=body, sender=sender, features=features, tag=is_sign)
         except peewee.IntegrityError: # возникает при вставке тех же значений
-            print("IntegrityError")
+            pass
+            #print("IntegrityError")
 
 
-def get_classifier_data(first=True):
+def get_classifier_data(for_email=True):
     """Извлечение данных из таблицы для обучения классификатора
     """
 
     data = {"features": [], "tag": []}
 
-    if first:
+    if for_email:
         selected_data = EMailTable.select(EMailTable.features, EMailTable.tag).tuples()
     else:
         selected_data = LinesTable.select(LinesTable.features, LinesTable.tag).tuples()
@@ -123,19 +127,16 @@ def get_classifier_data(first=True):
 
     return data
 
+
+def clear_tables():
+    EMailTable.drop_table()
+    LinesTable.drop_table()
+
+
 def md5(fname):
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
-
-if __name__ == '__main__':
-    #setup_db()
-    #ill_tables('dataset/dataset/with/', 1, 10)
-    #fill_tables('dataset/dataset/without/', -1, 10)
-    print(count_sig_and_non_sig_lines())
-
-    
-
 
