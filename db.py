@@ -110,16 +110,12 @@ def fill_tables(dir, is_sign, count):
             #print("IntegrityError")
 
 
-def get_classifier_data(for_email=True):
+def get_classifier_data():
     """Извлечение данных из таблицы для обучения классификатора
     """
 
     data = {"features": [], "tag": []}
-
-    if for_email:
-        selected_data = EMailTable.select(EMailTable.features, EMailTable.tag).tuples()
-    else:
-        selected_data = LinesTable.select(LinesTable.features, LinesTable.tag).tuples()
+    selected_data = LinesTable.select(LinesTable.features, LinesTable.tag).tuples()
 
     for feature, tag in selected_data:
         data["features"].append([int(x) for x in feature.split(',')])

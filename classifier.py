@@ -14,12 +14,11 @@ class Classifier(object):
     и классификации строк письма по признаку подпись/не подпись
     """
 
-    def __init__(self, classifier_filename, extractor_filename):
+    def __init__(self, classifier_filename):
         """Загрузка обученных классификаторов из файлов
         """
         try:
             self.classifier = self._load(classifier_filename)
-            self.extractor = self._load(extractor_filename)
         except ClassifierException as e:
             raise e
 
@@ -27,26 +26,13 @@ class Classifier(object):
     def test_classifier(self, data, classifier):
         pass
 
-    def check_email_for_signature(self, email_lines, sender):
-        """Метод для определения наличия подписи в письме
-        """
-
-        features = get_features_for_email(email_lines, 10, sender)
-        res = self.classifier.predict([features])
-        
-        print("Features: ", features)
-        print("Res:", res[0])
-        
-        if res[0] == 1:
-            return True
-        return False
     
     def check_line_for_signature(self, line, sender):
         """Метод для определения того, является ли строка подписью
         """
 
         features = get_features_for_line(line, sender)
-        res = self.extractor.predict([features])
+        res = self.classifier.predict([features])
         
         print("Features: ", features)
         print("Res:", res[0])
@@ -108,9 +94,9 @@ class Classifier(object):
         print("\taccuracy train: ", accuracy_score(train['tag'] , predicted))
 
         predicted = classifier.predict(test['features'])
-        print("\taccuracy train: ", accuracy_score(test['tag'] , predicted))
+        print("\taccuracy test: ", accuracy_score(test['tag'] , predicted))
 
-        print(classification_report(test['tag'], predicted, target_names=['without', 'with']))
+        print(classification_report(test['tag'], predicted, target_names=['no sign', 'sign']))
         print(confusion_matrix(test['tag'] , predicted))
         
     @staticmethod

@@ -6,15 +6,15 @@ import re
 import unicodedata
 from functools import reduce
 
-MAX_SIGNATURE_LINE_LEN = 60
-HEADWORD_PERCENT = 66
+MAX_SIGNATURE_LINE_LEN = 50
+HEADWORD_PERCENT = 50
 
 RE_EMAIL = re.compile(r'[a-zA-Z0-9_.#$&!\'=/^?~{|}+-]'
-                      r'+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+                      r'+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+')
 
 RE_URL = re.compile(r'(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?')
 
-RE_SEPARATOR = re.compile(r'^[\s]*[-]{1,10}[\s]*$')
+RE_SEPARATOR = re.compile(r'^[\s]*[-]{1,30}[\s]*$')
 
 RE_SPEC_SYMBOLS = re.compile(r'^[\s]*([\*]|#|[\+]|[\^]|-|[\~]|[\&]|[\$]|_|[\!]'
                              r'|[\/]|[\%]|[\:]|[\=]){10,}[\s]*$')
@@ -23,7 +23,7 @@ RE_TEL_NUMBER = re.compile(r'(((\+?[\d]{,1}\s?\(?[\d]{3,4}\)?\s?)|'
     r'([\d]\-[\d]{3}\-))[\d]{2,3}[\s-]?[\d]{2}[\s-]?[\d]{2})|'
     r'(\(? ?[\d]{2,3} ?\)?[.\- ]{,1})[\d]{2,3}[.\- ]{,1}[\d]{2,4}')
 
-RE_STANDART_SING_WORDS = re.compile(r'(T|t)hank.*,|(B|b)est|(R|r)egards|'
+RE_STANDART_SIGN_WORDS = re.compile(r'(T|t)hank.*,|(B|b)est|(R|r)egards|'
         r'^sent[ ]{1}from[ ]{1}my[\s,!\w]*$|BR|(S|s)incerely|'
         r'(C|c)orporation|Group|(О|o)тправлено\sс*|(С|с)\s(У|у)важением|'
         r'(У|y)дачного|(Х|х)орошего|(В|в)ам|доброго|(С|с)пасибо')
@@ -119,10 +119,10 @@ def get_features_func_list(sender=''):
         regex_search(RE_SPEC_SYMBOLS),
         regex_search(RE_TEL_NUMBER),
         regex_search(RE_NAME),
-        regex_search(RE_STANDART_SING_WORDS),
+        regex_search(RE_STANDART_SIGN_WORDS),
         headword_more_than,
-        lambda s: 1 if punct_percent(s) > 50 else 0,
-        lambda s: 1 if punct_percent(s) > 90 else 0,
+        #lambda s: 1 if punct_percent(s) > 50 else 0,
+        #lambda s: 1 if punct_percent(s) > 90 else 0,
         lambda s: 0 if len(s) > MAX_SIGNATURE_LINE_LEN else 1,
         is_contain_sender_name(sender)
     ]

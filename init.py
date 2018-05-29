@@ -1,25 +1,23 @@
-"""Модуль, выполняющий загрузку данных в БД, обучение классификаторов
-и их сохранение
+"""Модуль, выполняющий загрузку данных в БД, обучение классификатора
+и его сохранение
 
 usage: python init.py option
     option:
         --all-setup  - заполнение БД и обучение
         --setup-db - заполнение таблиц БД
-        --learn - обучение классификаторов
-        --learn-classifier - обучение первого классификатора
-        --learn-extractor - обучение второго классификатора
+        --learn - обучение классификатора
         --clear-db - очищение таблиц в бд
 """
 
 import sys
 import db
 from classifier import Classifier
-from const import CLASSIFIER_PATH, EXTRACTOR_PATH
+from const import CLASSIFIER_PATH
 
 
 def all_setup():
     setup_db()
-    learn()
+    fit()
 
 def setup_db():
     db.setup_db()
@@ -28,21 +26,10 @@ def setup_db():
 
     print(db.count_sig_and_non_sig_lines())
 
-def learn():
-    learn_classifier()
-    learn_extractor()
-
-
-def learn_classifier():
+def fit():
     c = Classifier.get_classifier()
     data = db.get_classifier_data()
-    Classifier.train(c, data, 0.5,  CLASSIFIER_PATH)
-
-def learn_extractor():
-    c = Classifier.get_classifier()
-    data = db.get_classifier_data(for_email=False)
-    Classifier.train(c, data, 0.5, CLASSIFIER_PATH)
-
+    Classifier.train(c, data, 0.2,  CLASSIFIER_PATH)
 
 def clear_db():
     db.clear_tables()
@@ -58,11 +45,7 @@ if __name__ == '__main__':
         elif option == '--setup-db':
             setup_db()
         elif option == '--learn':
-            learn()
-        elif option == '--learn-classifier':
-            learn_classifier()
-        elif option == '--learn-extractor':
-            learn_extractor()
+            fit()
         elif option == '--clear-db':
             clear_db()
         else:

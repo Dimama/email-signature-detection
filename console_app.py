@@ -4,7 +4,7 @@
 import sys
 from os import path
 from classifier import Classifier, ClassifierException
-from const import CLASSIFIER_PATH, EXTRACTOR_PATH
+from const import CLASSIFIER_PATH
 
 
 def delete_signature(email_filename, sender_filename=None):
@@ -22,28 +22,21 @@ def delete_signature(email_filename, sender_filename=None):
         sender = ''
 
     try: 
-        c = Classifier(CLASSIFIER_PATH, EXTRACTOR_PATH)
+        c = Classifier(CLASSIFIER_PATH)
     except ClassifierException as e:
         raise e
     
-    with_sign = c.check_email_for_signature(email_lines, sender)
-    
-    if with_sign:
-        signature_lines = []
-        other_lines = []
+    signature_lines = []
+    other_lines = []
 
-        email_lines = [l for l in email_lines if l.strip()]
-        for line in email_lines:
-            if c.check_line_for_signature(line, sender):
-                signature_lines.append(line)
-            else:
-                other_lines.append(line)
+    email_lines = [l for l in email_lines if l.strip()]
+    for line in email_lines:
+        if c.check_line_for_signature(line, sender):
+            signature_lines.append(line)
+        else:
+            other_lines.append(line)
         
-        return other_lines, signature_lines
-        
-    else: 
-        return email_lines, None
-
+    return other_lines, signature_lines
     
 def main():
     try:
@@ -75,7 +68,7 @@ def main():
     for line in text:
         print(line)
     
-    if signature:
+    if len(signature) > 0:
         print("\nSiganture Lines")
         for line in signature:
             print(line)
