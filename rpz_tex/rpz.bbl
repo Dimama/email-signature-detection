@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{}
 \def\selectlanguageifdefined#1{
 \expandafter\ifx\csname date#1\endcsname\relax
 \else\language\csname l@#1\endcsname\fi}
